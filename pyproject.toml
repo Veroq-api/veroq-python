@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "veroq"
+version = "1.1.0"
+description = "VEROQ Python SDK — verified intelligence for AI agents. The truth protocol for agentic AI."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "VEROQ", email = "dev@veroq.ai" },
+]
+keywords = ["veroq", "verified", "intelligence", "api", "sdk", "ai", "agents", "nlp", "truth", "financial"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+dependencies = [
+    "requests>=2.20",
+]
+
+[project.scripts]
+veroq = "veroq.cli:main"
+
+[project.optional-dependencies]
+async = ["httpx>=0.24"]
+
+[project.urls]
+Homepage = "https://veroq.ai"
+Documentation = "https://veroq.ai/docs"
+Repository = "https://github.com/veroq/veroq-python"
+"Bug Tracker" = "https://github.com/veroq/veroq-python/issues"
+Changelog = "https://veroq.ai/docs/changelog"
+
+[tool.hatch.build.targets.sdist]
+include = ["veroq/", "LICENSE", "README.md"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["veroq"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
