@@ -1,5 +1,10 @@
 # veroq
 
+[![PyPI](https://img.shields.io/pypi/v/veroq?color=2EE89A&label=PyPI)](https://pypi.org/project/veroq/)
+[![Downloads](https://img.shields.io/pypi/dm/veroq?color=2EE89A)](https://pypi.org/project/veroq/)
+[![License](https://img.shields.io/badge/license-MIT-2EE89A)](LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/veroq?color=2EE89A)](https://pypi.org/project/veroq/)
+
 VEROQ Python SDK -- verified intelligence for AI agents. The truth protocol for agentic AI.
 
 > **Migrating from `polaris-news`?** This is the official successor. All class names and env vars are backwards compatible. Just change your import from `polaris_news` to `veroq`.
