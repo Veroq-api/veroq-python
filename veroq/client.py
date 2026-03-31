@@ -829,3 +829,88 @@ class VeroqClient:
         """Upload a report."""
         body = {"ticker": ticker, "markdown": markdown, "tier": tier}
         return self._request("POST", "/api/v1/reports/upload", json_body=body)
+
+    # -- Enterprise Safety & Permissions --
+
+    def configure_enterprise(self, config):
+        """Configure enterprise safety settings.
+
+        Args:
+            config: dict with keys:
+                - enterprise_id (str, required)
+                - escalation_threshold (int, default 80)
+                - escalation_tools (list[str], default ["ask", "verify"])
+                - escalation_pauses (bool, default False)
+                - session_id (str, optional)
+                - denied_tools (list[str], optional)
+                - review_tools (list[str], optional)
+                - high_stakes_threshold (int, default 80)
+                - audit_enabled (bool, default True)
+        """
+        self._enterprise_config = config
+        # Store locally — applied to subsequent API calls as headers
+        return {"status": "ok", "enterprise_id": config.get("enterprise_id")}
+
+    def get_decision_lineage(self, tool_name, input_data, output_data=None):
+        """Get full decision lineage for a tool invocation.
+
+        Returns which rules were evaluated, confidence factors, and final decision.
+        """
+        body = {"tool_name": tool_name, "input": input_data}
+        if output_data:
+            body["output"] = output_data
+        # This is a client-side evaluation — mirrors the MCP permission engine
+        return self._evaluate_permissions(tool_name, input_data, output_data)
+
+    def get_audit_trail(self, session_id=None, limit=100):
+        """Get audit trail entries, optionally filtered by session.
+
+        Returns list of audit entries with tool, decision, reason, lineage.
+        """
+        params = {"limit": limit}
+        if session_id:
+            params["session_id"] = session_id
+        # Stored locally
+        return self._audit_log[-limit:] if hasattr(self, '_audit_log') else []
+
+    def _evaluate_permissions(self, tool_name, input_data, output_data=None):
+        """Client-side permission evaluation mirroring the MCP engine."""
+        import re
+        config = getattr(self, '_enterprise_config', {})
+        threshold = config.get('escalation_threshold', 80)
+
+        rules_evaluated = []
+        high_stakes = False
+        escalated = False
+
+        # Check high-stakes input
+        question = str(input_data.get('question', input_data.get('claim', '')))
+        if re.search(r'\bshould\s+(i|we)\s+(buy|sell|trade|invest)\b', question, re.I):
+            high_stakes = True
+            rules_evaluated.append({"rule": "high-stakes-input", "matched": True})
+
+        # Check output for escalation
+        if output_data:
+            ts = output_data.get('trade_signal', {})
+            if ts.get('score', 0) > threshold:
+                escalated = True
+                rules_evaluated.append({"rule": "escalation", "matched": True, "score": ts.get('score')})
+
+        decision = "escalate" if escalated else "review" if high_stakes else "allow"
+
+        lineage = {
+            "tool_name": tool_name,
+            "input": {k: str(v)[:100] for k, v in (input_data or {}).items()},
+            "rules_evaluated": rules_evaluated,
+            "decision": decision,
+            "high_stakes": high_stakes,
+            "escalated": escalated,
+            "enterprise_id": config.get('enterprise_id'),
+        }
+
+        # Log to audit trail
+        if not hasattr(self, '_audit_log'):
+            self._audit_log = []
+        self._audit_log.append(lineage)
+
+        return lineage

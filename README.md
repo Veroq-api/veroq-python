@@ -1,10 +1,5 @@
 # veroq
 
-[![PyPI](https://img.shields.io/pypi/v/veroq?color=2EE89A&label=PyPI)](https://pypi.org/project/veroq/)
-[![Downloads](https://img.shields.io/pypi/dm/veroq?color=2EE89A)](https://pypi.org/project/veroq/)
-[![License](https://img.shields.io/badge/license-MIT-2EE89A)](LICENSE)
-[![Python](https://img.shields.io/pypi/pyversions/veroq?color=2EE89A)](https://pypi.org/project/veroq/)
-
 VEROQ Python SDK -- verified intelligence for AI agents. The truth protocol for agentic AI.
 
 > **Migrating from `polaris-news`?** This is the official successor. All class names and env vars are backwards compatible. Just change your import from `polaris_news` to `veroq`.
@@ -38,6 +33,41 @@ for event in client.ask_stream("AAPL price and technicals"):
         print(f"[{event['data']['key']}] loaded")
     elif event["type"] == "summary_token":
         print(event["data"]["token"], end="", flush=True)
+```
+
+## Enterprise Safety & Permissions
+
+```python
+from veroq import VeroqClient
+
+client = VeroqClient()
+
+# Configure enterprise safety
+client.configure_enterprise({
+    "enterprise_id": "acme-capital",
+    "escalation_threshold": 60,
+    "escalation_tools": ["ask", "verify"],
+    "escalation_pauses": True,
+    "session_id": "trading-session-001",
+})
+
+# High-level analysis with verification
+result = client.ask("Full analysis of NVDA")
+print(result["trade_signal"])  # { action: "hold", score: 55 }
+
+# Verify a claim with evidence chain
+verified = client.verify("NVIDIA beat Q4 earnings")
+print(verified["verdict"])              # "supported"
+print(verified["evidence_chain"])       # [{ source: "Reuters", ... }]
+print(verified["confidence_breakdown"]) # { source_agreement: 0.92, ... }
+
+# Get decision lineage
+lineage = client.get_decision_lineage("ask", {"question": "Should I buy NVDA?"})
+print(lineage["decision"])     # "review" (high-stakes detected)
+print(lineage["high_stakes"])  # True
+
+# Get audit trail
+trail = client.get_audit_trail(session_id="trading-session-001")
 ```
 
 ### Universal Agent Connector
